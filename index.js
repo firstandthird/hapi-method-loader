@@ -50,15 +50,29 @@ exports.register = function(server, options, next) {
 
       var methods = require('require-all')(settings.path);
 
-      _.forIn(methods, function(value, key) {
-        //check if folder
-        if (typeof value == 'object' && !value.method) { //assume folder
-          _.forIn(value, function(v, k) {
-            addMethod(key, k, v, settings.verbose);
-          });
-        } else {
-          addMethod(false, key, value, settings.verbose);
-        }
+      var isFolder = function(module){
+        return (typeof module == 'object' && !module.method);
+      }
+      var addFile = function(file, fileName){
+        if (options.prefix)
+          addMethod(options.prefix, fileName, file, settings.verbose);
+        else
+          addMethod(false, fileName, file, settings.verbose);
+      }
+      var addFolder = function(folder, folderName){
+        _.forIn(folder, function(module, methodName) {
+          if (options.prefix)
+            addMethod(options.prefix, methodName, module, settings.verbose);
+          else
+            addMethod(folderName, methodName, module, settings.verbose);
+        });
+      }
+      _.forIn(methods, function(module, moduleName) {
+        console.log("module is %s", moduleName);
+        if (isFolder(module))
+          addFolder(module, moduleName);
+        else
+          addFile(module,moduleName);
       });
 
       next();
