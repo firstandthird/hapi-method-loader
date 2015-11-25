@@ -2,6 +2,7 @@ var Code = require('code');   // assertion library
 var Lab = require('lab');
 var lab = exports.lab = Lab.script();
 var Hapi = require('hapi');
+var methodLoader = require("../")
 
 lab.experiment('hapi-method-loader', function() {
   var server;
@@ -12,17 +13,34 @@ lab.experiment('hapi-method-loader', function() {
     done();
   });
 
-  // lab.test('lets you call a method added to a prefixed namespace correctly', function(done){
-  lab.test(' auto-adds a method from the methods directory and lets you call it', function(done){
-    server.start(function(err){
-      console.log(err)
-      server.methods.doSomething(function(err, result) {
-        console.log(err)
-        console.log(result)
-        Code.expect(typeof result).to.equal('string');
-        Code.expect(typeof result).to.equal('something');
+  lab.test(' auto-adds a method from a methods directory and lets you call it', function(done){
+    methodLoader(server, {
+      verbose : true,
+      path : __dirname + "/methods"
+    },
+    function(result){
+      server.start(function(err){
+        server.methods.doSomething(function(err, result) {
+          Code.expect(typeof result).to.equal('string');
+          Code.expect(result).to.equal('something');
+          done();
+        });
+      });
+    })
+  });
+
+  lab.test('lets you call a method added to a prefixed namespace correctly', function(done){
+    methodLoader(server, {
+      path : __dirname + "/methods",
+      prefix : "test"
+    },
+    function(result){
+      server.start(function(err){
+        var result = server.methods.test.add(1,1);
+        Code.expect(typeof result).to.equal('number');
+        Code.expect(result).to.equal(2);
         done();
       });
-    });
+    })
   });
 });
