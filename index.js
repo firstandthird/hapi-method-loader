@@ -7,7 +7,14 @@ var defaults = {
   autoLoad: true
 };
 
-module.exports = function(server, options, next) {
+exports.register = function(server, options, next) {
+  exports.methodLoader(server, options, next, true);
+}
+
+exports.register.attributes = {
+  pkg: require('./package.json')
+};
+exports.methodLoader = function(server, options, next, useAsPlugin) {
   var settings = _.clone(options);
   settings = _.defaults(settings, defaults);
 
@@ -76,8 +83,9 @@ module.exports = function(server, options, next) {
 
     });
   };
-
-  // server.expose('load', load);
+  if (useAsPlugin){
+    server.expose('load', load);
+  }
   if (options.autoLoad === false) {
     return next();
   }

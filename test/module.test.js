@@ -2,7 +2,7 @@ var Code = require('code');   // assertion library
 var Lab = require('lab');
 var lab = exports.lab = Lab.script();
 var Hapi = require('hapi');
-var methodLoader = require("../")
+var methodLoader = require("../").methodLoader
 
 lab.experiment('hapi-method-loader', function() {
   var server;
@@ -13,7 +13,7 @@ lab.experiment('hapi-method-loader', function() {
     done();
   });
 
-  lab.test(' auto-adds a method from a methods directory and lets you call it', function(done){
+  lab.test('loads as a module, auto-adds a method from a methods directory and lets you call it', function(done){
     methodLoader(server, {
       verbose : true,
       path : __dirname + "/methods"
@@ -29,7 +29,7 @@ lab.experiment('hapi-method-loader', function() {
     })
   });
 
-  lab.test('lets you call a method added to a prefixed namespace correctly', function(done){
+  lab.test('loads as a module, lets you call a method added to a prefixed namespace correctly', function(done){
     methodLoader(server, {
       path : __dirname + "/methods",
       prefix : "test"
