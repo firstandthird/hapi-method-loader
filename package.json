@@ -4,7 +4,8 @@
   "description": "Automatically loads hapi methods",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "lab -t 100 ",
+    "lint": "eslint ."
   },
   "keywords": [
     "hapi",
@@ -18,6 +19,11 @@
     "require-all": "^1.1.0"
   },
   "devDependencies": {
-    "hapi": "^10.1.0"
+    "code": "^2.1.0",
+    "eslint": "^1.10.3",
+    "eslint-config-airbnb": "^5.0.1",
+    "eslint-config-firstandthird": "^1.3.0",
+    "hapi": "^10.1.0",
+    "lab": "^7.3.0"
   }
 }

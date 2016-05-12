@@ -8,6 +8,15 @@ var defaults = {
 };
 
 exports.register = function(server, options, next) {
+  exports.methodLoader(server, options, next, true);
+}
+
+exports.register.attributes = {
+  pkg: require('./package.json')
+};
+exports.methodLoader = function(server, options, next, useAsPlugin) {
+  var settings = _.clone(options);
+  settings = _.defaults(settings, defaults);
 
   var addMethod = function(folder, key, value, verbose) {
     key = _.camelCase(key);
@@ -35,11 +44,8 @@ exports.register = function(server, options, next) {
   };
 
   var load = function(options, next) {
-    var settings = _.clone(options);
     next = next || function() {};
-    settings = _.defaults(settings, defaults);
     fs.stat(settings.path, function(err, stat) {
-
       if (err) {
         server.log(['hapi-method-loader', 'warning'], { message: err.message });
         return next();
@@ -51,7 +57,6 @@ exports.register = function(server, options, next) {
       }
 
       var methods = require('require-all')(settings.path);
-
       var isFolder = function(module){
         return (typeof module == 'object' && !module.method);
       }
@@ -80,14 +85,11 @@ exports.register = function(server, options, next) {
 
     });
   };
-
-  server.expose('load', load);
+  if (useAsPlugin){
+    server.expose('load', load);
+  }
   if (options.autoLoad === false) {
     return next();
   }
   load(options, next);
-};
-
-exports.register.attributes = {
-  pkg: require('./package.json')
 };
