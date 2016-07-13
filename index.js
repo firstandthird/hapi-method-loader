@@ -1,8 +1,11 @@
 'use strict';
 const _ = require('lodash');
 const fs = require('fs');
+const path = require('path');
+const reqDir = require('directory-files');
+
 const defaults = {
-  path: `${process.cwd()}/methods`,
+  path: `${process.cwd()}${path.sep}methods`,
   verbose: false,
   autoLoad: true
 };
@@ -12,71 +15,75 @@ exports.register = (server, options, next) => {
 exports.register.attributes = {
   pkg: require('./package.json')
 };
-exports.methodLoader = function(server, options, next, useAsPlugin) {
-  let settings = _.clone(options);
-  settings = _.defaults(settings, defaults);
 
-  const addMethod = (folder, key, value, verbose) => {
-    key = _.camelCase(key);
-    folder = (folder) ? _.camelCase(folder) : '';
-    if ((folder && typeof server.methods[folder] !== 'undefined' && typeof server.methods[folder][key] !== 'undefined') || (!folder && typeof server.methods[key] !== 'undefined')) {
-      server.log(['hapi-method-loader', 'error'], { message: 'method already exists', folder, key });
-      return;
-    }
-    key = (folder) ? `${folder}.${key}` : key;
+exports.methodLoader = function(server, options, next, useAsPlugin) {
+  const loadMethodFromFile = (file) => {
+    let value = require(file);
     if (typeof value === 'function') {
       value = {
         method: value
       };
     }
-    if (verbose) {
-      server.log(['hapi-method-loader', 'debug'], { message: 'method loaded', name: key, options: value.options });
+    if (value.options) {
+      value.options.bind = server;
+    } else {
+      value.options = { bind: server };
     }
-    if (value.options) value.options.bind = server;
-    else value.options = { bind: server };
-    server.method(key, value.method, value.options);//
+    return value;
   };
 
   const load = (passedOptions, loadDone) => {
-    loadDone = loadDone || (() => {});
-    settings = _.defaults(settings, defaults);
-    fs.stat(settings.path, (err, stat) => {
-      if (err) {
-        server.log(['hapi-method-loader', 'warning'], { message: err.message });
-        return loadDone();
-      }
-      if (!stat.isDirectory()) {
+    // get default settings and normalize the methods path:
+    // let settings = passedOptions ? _.clone(_.defaults(defaults, passedOptions)) : _.clone(_.defaults(defaults, options));
+    const settings = _.defaults(passedOptions, defaults);
+    settings.path = path.normalize(path.resolve(settings.path));
+    // make sure the path exists and is loadable:
+    try {
+      const stat = fs.statSync(settings.path);
+      if (!stat || !stat.isDirectory) {
         server.log(['hapi-method-loader', 'warning'], { path: settings.path, message: 'Not a directory' });
-        return loadDone();
+        return loadDone('Not a directory');
       }
-      const methods = require('require-all')(settings.path);
-      const isFolder = (module) => {
-        return (typeof module === 'object' && !module.method);
-      };
-      const addFile = (file, fileName) => {
-        if (options.prefix) {
-          addMethod(options.prefix, fileName, file, settings.verbose);
+    } catch (err) {
+      server.log(['hapi-method-loader', 'warning'], { message: err.message });
+      return loadDone(err);
+    }
+    // get all files (at any level) underneath the methods directory:
+    reqDir(settings.path).then((hash) => {
+      // go through each file, parse it and add it, abort if anything goes awry:
+      for (let i = 0; i < hash.length; i++) {
+        const file = hash[i];
+        // get an array containing the elements of the module:
+        const relativePathSegments = _.difference(file.split(path.sep), settings.path.split(path.sep));
+        let key;
+        // if it's in the root methods folder:
+        if (relativePathSegments.length === 1) {
+          // get the method's name to use as a key in server.methods:
+          key = _.camelCase(path.basename(relativePathSegments[0], path.extname(relativePathSegments[0])));
+          key = settings.prefix ? `${settings.prefix}.${key}` : key;
         } else {
-          addMethod(false, fileName, file, settings.verbose);
+          // get the method's name (including the path) as a key in server.methods:
+          const lastIndex = relativePathSegments.length - 1;
+          relativePathSegments[lastIndex] = path.basename(relativePathSegments[lastIndex], path.extname(relativePathSegments[lastIndex]));
+          _.each(relativePathSegments, (item, n) => {
+            relativePathSegments[n] = _.camelCase(item);
+          });
+          key = relativePathSegments.join('.');
+          key = settings.prefix ? `${settings.prefix}.${key}` : key;
         }
-      };
-      const addFolder = (folder, folderName) => {
-        _.forIn(folder, (module, methodName) => {
-          if (options.prefix) {
-            addMethod(options.prefix, methodName, module, settings.verbose);
-          } else {
-            addMethod(folderName, methodName, module, settings.verbose);
+        // finally, add the function to the server:
+        if (!_.get(server.methods, key)) {
+          // load the executable:
+          const method = loadMethodFromFile(file);
+          if (settings.verbose) {
+            server.log(['hapi-method-loader', 'debug'], { message: 'method loaded', name: key, options: method.options });
           }
-        });
-      };
-      _.forIn(methods, (module, moduleName) => {
-        if (isFolder(module)) {
-          addFolder(module, moduleName);
+          server.method(key, method.method, method.options);
         } else {
-          addFile(module, moduleName);
+          server.log(['hapi-method-loader', 'error'], { message: 'method already exists', key });
         }
-      });
-      loadDone();
+      }
+      return loadDone();
     });
   };
   if (useAsPlugin) {
