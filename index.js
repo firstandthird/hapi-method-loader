@@ -25,9 +25,9 @@ exports.methodLoader = function(server, options, next, useAsPlugin) {
       };
     }
     if (value.options) {
-      value.options.bind = server;
+      value.options.bind = server.root;
     } else {
-      value.options = { bind: server };
+      value.options = { bind: server.root };
     }
     return value;
   };
