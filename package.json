@@ -1,6 +1,6 @@
 {
   "name": "hapi-method-loader",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Automatically loads hapi methods",
   "main": "index.js",
   "scripts": {
