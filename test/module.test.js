@@ -158,4 +158,11 @@ lab.experiment('hapi-method-loader', () => {
       done();
     });
   });
+  lab.test('keeps on going when a method file fails to load', (done) => {
+    methodLoader(server, { path: 'test/error' }, (err) => {
+      Code.expect(typeof server.methods.b).to.equal('function');
+      Code.expect(typeof server.methods.a).to.equal('undefined');
+      done();
+    });
+  });
 });

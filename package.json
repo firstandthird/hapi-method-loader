@@ -4,8 +4,8 @@
   "description": "Automatically loads hapi methods",
   "main": "index.js",
   "scripts": {
-    "test": "lab -t 90 --leaks",
-    "lint": "eslint **/*.js"
+    "test": "lab test/module.test.js test/plugin.test.js -t 90 --leaks",
+    "lint": "eslint **/*.test.js"
   },
   "keywords": [
     "hapi",

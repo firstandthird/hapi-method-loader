@@ -18,23 +18,28 @@ exports.register.attributes = {
 
 exports.methodLoader = function(server, options, next, useAsPlugin) {
   const loadMethodFromFile = (file) => {
-    let value = require(file);
-    if (typeof value === 'function') {
-      value = {
-        method: value
-      };
-    }
-    if (value.options && typeof value.options.cache === 'function') {
-      value.options = value.options || {};
-      value.options.cache = value.options.cache(server, options);
-    }
+    try {
+      let value = require(file);
+      if (typeof value === 'function') {
+        value = {
+          method: value
+        };
+      }
+      if (value.options && typeof value.options.cache === 'function') {
+        value.options = value.options || {};
+        value.options.cache = value.options.cache(server, options);
+      }
 
-    if (value.options) {
-      value.options.bind = server.root;
-    } else {
-      value.options = { bind: server.root };
+      if (value.options) {
+        value.options.bind = server.root;
+      } else {
+        value.options = { bind: server.root };
+      }
+      return value;
+    } catch (err) {
+      server.log(['hapi-method-loader', 'warning'], { path: file, message: 'Error loading' });
+      return {};
     }
-    return value;
   };
 
   const load = (passedOptions, loadDone) => {
@@ -94,7 +99,9 @@ exports.methodLoader = function(server, options, next, useAsPlugin) {
           if (settings.verbose) {
             server.log(['hapi-method-loader', 'debug'], { message: 'method loaded', name: key });
           }
-          server.method(key, method.method, method.options);
+          if (method.method) {
+            server.method(key, method.method, method.options);
+          }
         } else {
           server.log(['hapi-method-loader', 'error'], { message: 'method already exists', key });
         }
