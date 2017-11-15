@@ -23,7 +23,7 @@
     "eslint": "^3.9.1",
     "eslint-config-firstandthird": "^3.0.2",
     "eslint-plugin-import": "^2.1.0",
-    "hapi": "^16.0.2",
-    "lab": "^11.2.1"
+    "hapi": "^17.0.0-rc9",
+    "lab": "^15.1.2"
   }
 }

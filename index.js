@@ -9,10 +9,13 @@ const defaults = {
   verbose: false,
   autoLoad: true
 };
-exports.register = (server, options, next) => {
-  exports.methodLoader(server, options, next, true);
+
+const register = (server, options) => {
+  exports.methodLoader(server, options, () => {}, true);
 };
-exports.register.attributes = {
+exports.plugin = {
+  register,
+  once: true,
   pkg: require('./package.json')
 };
 
