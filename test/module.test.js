@@ -8,24 +8,25 @@ const path = require('path');
 
 lab.experiment('hapi-method-loader', () => {
   let server;
-  lab.beforeEach((done) => {
+  lab.beforeEach(async () => {
     server = new Hapi.Server({
       debug: {
         log: ['error', 'hapi-method-loader']
       },
       port: 3000
     });
-    done();
   });
 
-  lab.test('loads as a module, auto-adds a method from a methods directory and lets you call it', { timeout: 5000 }, async (done) => {
+  lab.afterEach(async () => {
+    await server.stop();
+  });
+  lab.test('loads as a module, auto-adds a method from a methods directory and lets you call it', { timeout: 5000 }, async () => {
     methodLoader(server, {
       verbose: true,
       path: `${__dirname}${path.sep}methods`,
     },
     async() => {
       await server.start();
-      console.log(server.methods)
       server.methods.doSomething((err, result) => {
         Code.expect(typeof result).to.equal('string');
         Code.expect(result).to.equal('something');
@@ -56,28 +57,30 @@ lab.experiment('hapi-method-loader', () => {
     });
   });
 
-  lab.test('loads recursive modules', { timeout: 5000 }, async() => {
+  lab.test('loads recursive modules', { timeout: 5000 }, (done) => {
     methodLoader(server, {
       path: `${__dirname}${path.sep}recursiveMethods`,
     },
-    async() => {
-      server.start();
+    async () => {
+      await server.start();
       const result = server.methods.chris.is.awesome();
       Code.expect(typeof result).to.equal('string');
       Code.expect(result).to.equal('awesome');
+      done();
     });
   });
 
-  lab.test('loads recursive modules with prefixed namespace', async() => {
+  lab.test('loads recursive modules with prefixed namespace', (done) => {
     methodLoader(server, {
       path: `${__dirname}${path.sep}recursiveMethods`,
       prefix: 'seriously'
     },
     async () => {
-      server.start();
+      await server.start();
       const result = server.methods.seriously.chris.is.awesome();
       Code.expect(typeof result).to.equal('string');
       Code.expect(result).to.equal('awesome');
+      done();
     });
   });
 
@@ -148,10 +151,12 @@ lab.experiment('hapi-method-loader', () => {
       Code.expect(results[1]).to.include('add.js has invalid property "cache"');
     });
   });
+
   lab.test('keeps on going when a method file fails to load', async () => {
     methodLoader(server, { path: 'test/error' }, (err) => {
       Code.expect(typeof server.methods.b).to.equal('function');
       Code.expect(typeof server.methods.a).to.equal('undefined');
     });
   });
+
 });

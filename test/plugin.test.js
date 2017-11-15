@@ -63,40 +63,33 @@ lab.experiment('hapi-method-loader', () => {
   });
 });
 
-// lab.experiment('hapi-method-loader cache', { timeout: 5000 }, () => {
-//   let server;
-//   lab.before((done) => {
-//     server = new Hapi.Server({
-//       debug: {
-//         log: ['error', 'hapi-method-loader']
-//       }
-//     });
-//     server.connection({ port: 3000 });
-//     server.register({
-//       register: methodLoader,
-//       options: {
-//         path: path.join(__dirname, 'cache')
-//       },
-//     }, (err) => {
-//       if (err) {
-//         throw err;
-//       }
-//       done();
-//     });
-//   });
-//   lab.test('supports caching option from a method call', (done) => {
-//     server.start(() => {
-//       server.methods.cacheIt((err1, result1) => {
-//         server.methods.cacheIt((err2, result2) => {
-//           setTimeout(() => {
-//             server.methods.cacheIt((err3, result3) => {
-//               Code.expect(result1).to.equal(result2);
-//               Code.expect(result2).to.not.equal(result3);
-//               done();
-//             });
-//           }, 3000);
-//         });
-//       });
-//     });
-//   });
-// });
+lab.experiment('hapi-method-loader cache', { timeout: 5000 }, async() => {
+  let server;
+  lab.before(async () => {
+    server = new Hapi.Server({
+      debug: {
+        log: ['error', 'hapi-method-loader']
+      },
+      port: 3000
+    });
+    await server.register({
+      plugin: methodLoader,
+      options: {
+        path: path.join(__dirname, 'cache')
+      },
+    });
+  });
+  lab.test('supports caching option from a method call', async () => {
+    await server.start();
+    server.methods.cacheIt((err1, result1) => {
+      server.methods.cacheIt((err2, result2) => {
+        setTimeout(() => {
+          server.methods.cacheIt((err3, result3) => {
+            Code.expect(result1).to.equal(result2);
+            Code.expect(result2).to.not.equal(result3);
+          });
+        }, 3000);
+      });
+    });
+  });
+});
