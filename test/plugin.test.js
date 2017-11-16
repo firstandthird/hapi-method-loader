@@ -43,11 +43,10 @@ lab.experiment('hapi-method-loader', () => {
       },
     });
     await server.start();
-    server.methods.test.doSomething(async (someEerr, result) => {
-      Code.expect(typeof result).to.equal('string');
-      Code.expect(result).to.equal('something');
-      await server.stop();
-    });
+    const result = await server.methods.test.doSomething();
+    Code.expect(typeof result).to.equal('string');
+    Code.expect(result).to.equal('something');
+    await server.stop();
   });
 
   lab.test('loads as a plugin, lets you call a method added to a prefixed namespace correctly', async() => {
