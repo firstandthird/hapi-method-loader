@@ -19,11 +19,10 @@ lab.experiment('hapi-method-loader', () => {
       path: `${__dirname}${path.sep}methods`,
     });
     await server.start();
-    server.methods.doSomething(async(err, result) => {
-      Code.expect(typeof result).to.equal('string');
-      Code.expect(result).to.equal('something');
-      await server.stop();
-    });
+    const result = server.methods.doSomething();
+    Code.expect(typeof result).to.equal('string');
+    Code.expect(result).to.equal('something');
+    await server.stop();
   });
 
   lab.test('loads as a module, lets you call a method added to a prefixed namespace correctly', { timeout: 5000 }, async () => {
