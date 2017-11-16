@@ -1,28 +1,31 @@
 'use strict';
 const Hapi = require('hapi');
-const server = new Hapi.Server({
-  debug: {
-    log: ['error', 'hapi-method-loader']
-  }
-});
-server.connection({ port: 3000 });
+const path = require('path');
 
-server.register({
-  register: require('../'),
-  options: {
-    verbose: true,
-    prefix: 'test'
-  }
-}, (err) => {
-  if (err) {
-    console.error('Failed to load a plugin:', err);
-    return;
-  }
-  server.start(() => {
+const run = async () => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  try {
+    await server.register({
+      plugin: require('../'),
+      options: {
+        path: path.join(__dirname, 'methods'),
+        verbose: true,
+        prefix: 'test'
+      }
+    });
+    await server.start();
+    console.log('Server running at:', server.info.uri);
     server.methods.test.doSomething((doSomethingErr, result) => {
       console.log('method result', result);
     });
+  } catch (e) {
+    console.log(e)
+  }
+};
 
-    console.log('Server running at:', server.info.uri);
-  });
-});
+run();
