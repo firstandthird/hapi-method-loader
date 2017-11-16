@@ -30,9 +30,9 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
       }
 
       if (value.options) {
-        value.options.bind = server.root;
+        value.options.bind = server;
       } else {
-        value.options = { bind: server.root };
+        value.options = { bind: server };
       }
       return value;
     } catch (err) {
