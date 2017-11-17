@@ -4,7 +4,7 @@
   "description": "Automatically loads hapi methods",
   "main": "index.js",
   "scripts": {
-    "test": "lab test/module.test.js test/plugin.test.js -t 90 --leaks",
+    "test": "lab test/**.test.js -t 90 --leaks",
     "lint": "eslint **/*.test.js"
   },
   "keywords": [
@@ -19,11 +19,11 @@
     "lodash": "^4.17.2"
   },
   "devDependencies": {
+    "hapi": "^17.0.1",
     "code": "^4.0.0",
     "eslint": "^3.9.1",
     "eslint-config-firstandthird": "^3.0.2",
     "eslint-plugin-import": "^2.1.0",
-    "hapi": "^16.0.2",
-    "lab": "^11.2.1"
+    "lab": "^15.1.2"
   }
 }

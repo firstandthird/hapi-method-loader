@@ -1,7 +1,7 @@
 
 module.exports = {
-  method(next) {
-    return next(null, new Date().toString());
+  method() {
+    return new Date().toString();
   },
   options: {
     cache: (server, pluginOptions) => {

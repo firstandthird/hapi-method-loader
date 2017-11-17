@@ -3,20 +3,19 @@ const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
 const reqDir = require('directory-files');
+const util = require('util');
 
 const defaults = {
   path: `${process.cwd()}${path.sep}methods`,
   verbose: false,
   autoLoad: true
 };
-exports.register = (server, options, next) => {
-  exports.methodLoader(server, options, next, true);
-};
-exports.register.attributes = {
-  pkg: require('./package.json')
+
+const register = async (server, options) => {
+  await exports.methodLoader(server, options, true);
 };
 
-exports.methodLoader = function(server, options, next, useAsPlugin) {
+exports.methodLoader = async function(server, options, useAsPlugin) {
   const loadMethodFromFile = (file) => {
     try {
       let value = require(file);
@@ -31,9 +30,9 @@ exports.methodLoader = function(server, options, next, useAsPlugin) {
       }
 
       if (value.options) {
-        value.options.bind = server.root;
+        value.options.bind = server;
       } else {
-        value.options = { bind: server.root };
+        value.options = { bind: server };
       }
       return value;
     } catch (err) {
@@ -109,11 +108,19 @@ exports.methodLoader = function(server, options, next, useAsPlugin) {
       return loadDone();
     });
   };
+
+  const promiseLoad = util.promisify(load);
   if (useAsPlugin) {
-    server.expose('load', load);
+    server.expose('load', promiseLoad);
   }
   if (options.autoLoad === false) {
     return next();
   }
-  load(options, next);
+  await promiseLoad(options);
+};
+
+exports.plugin = {
+  register,
+  once: true,
+  pkg: require('./package.json')
 };

@@ -1,5 +1,5 @@
 module.exports = {
-  method: function(next) {
-    return next(null, this);
+  method() {
+    return this;
   }
 };
