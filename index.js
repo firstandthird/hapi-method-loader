@@ -20,9 +20,18 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
     try {
       let value = require(file);
       if (typeof value === 'function') {
-        value = {
+        const newValue = {
           method: value
         };
+        if (value.description) {
+          newValue.description = value.description;
+          delete value.description;
+        }
+        if (value.schema) {
+          newValue.schema = value.schema;
+          delete value.schema;
+        }
+        value = newValue;
       }
       if (value.options && typeof value.options.cache === 'function') {
         value.options = value.options || {};
@@ -100,6 +109,13 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
           }
           if (method.method) {
             server.method(key, method.method, method.options);
+            const registeredMethod = _.get(server.methods, key);
+            if (method.description) {
+              registeredMethod.description = method.description;
+            }
+            if (method.schema) {
+              registeredMethod.schema = method.schema;
+            }
           }
         } else {
           server.log(['hapi-method-loader', 'error'], { message: 'method already exists', key });

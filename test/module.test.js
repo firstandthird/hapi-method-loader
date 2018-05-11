@@ -194,4 +194,21 @@ lab.experiment('hapi-method-loader', () => {
       Code.expect(err).to.not.equal(undefined);
     }
   });
+
+  lab.test('will load "schema" and "description" metadata for hapi-docs', { timeout: 5000 }, async() => {
+    const server = new Hapi.Server({
+      debug: {
+        log: ['error', 'hapi-method-loader']
+      },
+      port: 3000
+    });
+    await methodLoader(server, {
+      path: `${__dirname}${path.sep}methods`,
+      verbose: true
+    });
+    await server.start();
+    Code.expect(server.methods.doSomething.description).to.equal('the description');
+    Code.expect(server.methods.doSomething.schema.isJoi).to.equal(true);
+    await server.stop();
+  });
 });
