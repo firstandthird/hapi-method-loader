@@ -207,6 +207,8 @@ lab.experiment('hapi-method-loader', () => {
       verbose: true
     });
     await server.start();
+    Code.expect(server.methods.add.description).to.equal(undefined);
+    Code.expect(server.methods.add.schema).to.equal(undefined);
     Code.expect(server.methods.doSomething.description).to.equal('the description');
     Code.expect(server.methods.doSomething.schema.isJoi).to.equal(true);
     await server.stop();
