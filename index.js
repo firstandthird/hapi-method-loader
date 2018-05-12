@@ -20,18 +20,9 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
     try {
       let value = require(file);
       if (typeof value === 'function') {
-        const newValue = {
+        value = {
           method: value
         };
-        if (value.description) {
-          newValue.description = value.description;
-          delete value.description;
-        }
-        if (value.schema) {
-          newValue.schema = value.schema;
-          delete value.schema;
-        }
-        value = newValue;
       }
       if (value.options && typeof value.options.cache === 'function') {
         value.options = value.options || {};
@@ -100,7 +91,7 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
           const method = loadMethodFromFile(file);
           // validate fields:
           Object.keys(method).forEach((propName) => {
-            if (['options', 'method'].indexOf(propName) < 0) {
+            if (['options', 'method', 'description', 'schema'].indexOf(propName) < 0) {
               server.log(['hapi-method-loader', 'error'], `Method imported from ${file} has invalid property "${propName}" `);
             }
           });
