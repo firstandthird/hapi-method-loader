@@ -91,7 +91,7 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
           const method = loadMethodFromFile(file);
           // validate fields:
           Object.keys(method).forEach((propName) => {
-            if (['options', 'method'].indexOf(propName) < 0) {
+            if (['options', 'method', 'description', 'schema'].indexOf(propName) < 0) {
               server.log(['hapi-method-loader', 'error'], `Method imported from ${file} has invalid property "${propName}" `);
             }
           });
@@ -100,6 +100,13 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
           }
           if (method.method) {
             server.method(key, method.method, method.options);
+            const registeredMethod = _.get(server.methods, key);
+            if (method.description) {
+              registeredMethod.description = method.description;
+            }
+            if (method.schema) {
+              registeredMethod.schema = method.schema;
+            }
           }
         } else {
           server.log(['hapi-method-loader', 'error'], { message: 'method already exists', key });
