@@ -168,18 +168,6 @@ lab.experiment('hapi-method-loader', () => {
     Code.expect(results[1]).to.include('add.js has invalid property "cache"');
   });
 
-  lab.test('keeps on going when a method file fails to load', async () => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, { path: 'test/error' });
-    Code.expect(typeof server.methods.b).to.equal('function');
-    Code.expect(typeof server.methods.a).to.equal('undefined');
-  });
-
   lab.test('returns an error if the directory does not exist', async() => {
     const server = new Hapi.Server({
       debug: {
