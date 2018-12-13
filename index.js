@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const reqDir = require('directory-files');
 const util = require('util');
-
 const defaults = {
   path: `${process.cwd()}${path.sep}methods`,
   verbose: false,
@@ -16,25 +15,7 @@ const register = async (server, options) => {
 };
 
 exports.methodLoader = async function(server, options, useAsPlugin) {
-  const loadMethodFromFile = (file) => {
-    let value = require(file);
-    if (typeof value === 'function') {
-      value = {
-        method: value
-      };
-    }
-    if (value.options && typeof value.options.cache === 'function') {
-      value.options = value.options || {};
-      value.options.cache = value.options.cache(server, options);
-    }
-
-    if (value.options) {
-      value.options.bind = server;
-    } else {
-      value.options = { bind: server };
-    }
-    return value;
-  };
+  const loadMethodFromFile = require('./lib/loadMethodFromFile');
 
   const load = (passedOptions, loadDone) => {
     const settings = _.defaults(passedOptions, defaults);
@@ -83,7 +64,7 @@ exports.methodLoader = async function(server, options, useAsPlugin) {
         // finally, add the function to the server:
         if (!_.get(server.methods, key)) {
           // load the executable:
-          const method = loadMethodFromFile(file);
+          const method = loadMethodFromFile(server, options, file);
           // validate fields:
           Object.keys(method).forEach((propName) => {
             if (['options', 'method', 'description', 'schema'].indexOf(propName) < 0) {
