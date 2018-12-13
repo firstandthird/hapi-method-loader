@@ -1,204 +1,201 @@
-'use strict';
-const Code = require('code');   // assertion library
-const Lab = require('lab');
-const lab = exports.lab = Lab.script();
+const tap = require('tap');
 const Hapi = require('hapi');
 const methodLoader = require('../').methodLoader;
 const path = require('path');
 
-lab.experiment('hapi-method-loader', () => {
-  lab.test('loads as a module, auto-adds a method from a methods directory and lets you call it', { timeout: 5000 }, async () => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      verbose: true,
-      path: `${__dirname}${path.sep}methods`,
-    });
-    await server.start();
-    const result = server.methods.doSomething();
-    Code.expect(typeof result).to.equal('string');
-    Code.expect(result).to.equal('something');
+tap.test('loads as a module, auto-adds a method from a methods directory and lets you call it', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    verbose: true,
+    path: `${__dirname}${path.sep}methods`,
+  });
+  await server.start();
+  const result = server.methods.doSomething();
+  t.isA(result, 'string');
+  t.equal(result, 'something');
+  await server.stop();
+});
+
+tap.test('loads as a module, lets you call a method added to a prefixed namespace correctly', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    path: `${__dirname}${path.sep}methods`,
+    prefix: 'test'
+  });
+  await server.start();
+  const result = server.methods.test.add(1, 1);
+  t.isA(result, 'number');
+  t.equal(result, 2);
+  await server.stop();
+});
+
+tap.test('will try to load the "methods" folder by default', async(t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    verbose: true
+  });
+  await server.start();
+  await server.stop();
+});
+
+tap.test('loads recursive modules', async(t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    path: `${__dirname}${path.sep}recursiveMethods`,
+  });
+  await server.start();
+  const result = server.methods.chris.is.awesome();
+  t.isA(result, 'string');
+  t.equal(result, 'awesome');
+  await server.stop();
+});
+
+tap.test('loads recursive modules with prefixed namespace', async(t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    path: `${__dirname}${path.sep}recursiveMethods`,
+    prefix: 'seriously'
+  });
+  await server.start();
+  const result = server.methods.seriously.chris.is.awesome();
+  t.isA(result, 'string');
+  t.equal(result, 'awesome');
+  await server.stop();
+});
+
+tap.test('warns if a duplicate method is added', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  let warningGiven = false;
+  server.method('add', async () => {
+    t.ok(warningGiven);
     await server.stop();
   });
-
-  lab.test('loads as a module, lets you call a method added to a prefixed namespace correctly', { timeout: 5000 }, async () => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      path: `${__dirname}${path.sep}methods`,
-      prefix: 'test'
-    });
-    await server.start();
-    const result = server.methods.test.add(1, 1);
-    Code.expect(typeof result).to.equal('number');
-    Code.expect(result).to.equal(2);
-    await server.stop();
-  });
-
-  lab.test('will try to load the "methods" folder by default', { timeout: 5000 }, async() => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      verbose: true
-    });
-    await server.start();
-    await server.stop();
-  });
-
-  lab.test('loads recursive modules', { timeout: 5000 }, async() => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      path: `${__dirname}${path.sep}recursiveMethods`,
-    });
-    await server.start();
-    const result = server.methods.chris.is.awesome();
-    Code.expect(typeof result).to.equal('string');
-    Code.expect(result).to.equal('awesome');
-    await server.stop();
-  });
-
-  lab.test('loads recursive modules with prefixed namespace', async() => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      path: `${__dirname}${path.sep}recursiveMethods`,
-      prefix: 'seriously'
-    });
-    await server.start();
-    const result = server.methods.seriously.chris.is.awesome();
-    Code.expect(typeof result).to.equal('string');
-    Code.expect(result).to.equal('awesome');
-    await server.stop();
-  });
-
-  lab.test('warns if a duplicate method is added', async () => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    let warningGiven = false;
-    server.method('add', async () => {
-      Code.expect(warningGiven).to.equal(true);
-      await server.stop();
-    });
-    server.events.on('log', (evt) => {
-      if (evt.data.message === 'method already exists') {
-        warningGiven = true;
-      }
-    });
-    await methodLoader(server, {
-      verbose: true,
-      path: `${__dirname}${path.sep}methods`,
-    });
-    server.methods.add();
-  });
-
-  lab.test('will load a relative path', async () => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      path: './test/methods'
-    });
-    await server.start();
-    const result = server.methods.add(1, 1);
-    Code.expect(typeof result).to.equal('number');
-    Code.expect(result).to.equal(2);
-    await server.stop();
-  });
-
-  lab.test('binds server', async () => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      path: './test/methods'
-    });
-    await server.start();
-    const boundServer = await server.methods.server();
-    Code.expect(typeof boundServer.plugins).to.equal('object');
-    await server.stop();
-  });
-
-  lab.test('will warn of an invalid method', async () => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    const results = [];
-    server.log = (tags, data) => {
-      results.push(tags);
-      results.push(data);
-    };
-    await methodLoader(server, {
-      path: './test/invalid'
-    });
-    Code.expect(results.length).to.equal(2);
-    Code.expect(results[1]).to.include('add.js has invalid property "cache"');
-  });
-
-  lab.test('returns an error if the directory does not exist', async() => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    try {
-      await methodLoader(server, { path: 'a nonexistent path' });
-      Code.expect(true).to.not.equal(true);
-    } catch (err) {
-      Code.expect(err).to.not.equal(undefined);
+  server.events.on('log', (evt) => {
+    if (evt.data.message === 'method already exists') {
+      warningGiven = true;
     }
   });
-
-  lab.test('will load "schema" and "description" metadata for hapi-docs', { timeout: 5000 }, async() => {
-    const server = new Hapi.Server({
-      debug: {
-        log: ['error', 'hapi-method-loader']
-      },
-      port: 3000
-    });
-    await methodLoader(server, {
-      path: `${__dirname}${path.sep}methods`,
-      verbose: true
-    });
-    await server.start();
-    Code.expect(server.methods.add.description).to.equal(undefined);
-    Code.expect(server.methods.add.schema).to.equal(undefined);
-    Code.expect(server.methods.doSomething.description).to.equal('the description');
-    Code.expect(server.methods.doSomething.schema.isJoi).to.equal(true);
-    await server.stop();
+  await methodLoader(server, {
+    verbose: true,
+    path: `${__dirname}${path.sep}methods`,
   });
+  server.methods.add();
+});
+
+tap.test('will load a relative path', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    path: './test/methods'
+  });
+  await server.start();
+  const result = server.methods.add(1, 1);
+  t.isA(result, 'number');
+  t.equal(result, 2);
+  await server.stop();
+});
+
+tap.test('binds server', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    path: './test/methods'
+  });
+  await server.start();
+  const boundServer = await server.methods.server();
+  t.isA(boundServer.plugins, 'object');
+  await server.stop();
+});
+
+tap.test('will warn of an invalid method', async (t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  const results = [];
+  server.log = (tags, data) => {
+    results.push(tags);
+    results.push(data);
+  };
+  await methodLoader(server, {
+    path: './test/invalid'
+  });
+  t.equal(results.length, 2);
+  t.match(results[1], 'add.js has invalid property "cache"');
+});
+
+tap.test('returns an error if the directory does not exist', async(t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  try {
+    await methodLoader(server, { path: 'a nonexistent path' });
+    // this is weird?
+    console.log('what is thiws');
+    t.equal(true, false);
+  } catch (err) {
+    t.end();
+  }
+});
+
+tap.test('will load "schema" and "description" metadata for hapi-docs', async(t) => {
+  const server = new Hapi.Server({
+    debug: {
+      log: ['error', 'hapi-method-loader']
+    },
+    port: 3000
+  });
+  await methodLoader(server, {
+    path: `${__dirname}${path.sep}methods`,
+    verbose: true
+  });
+  await server.start();
+  t.equal(server.methods.add.description, undefined);
+  t.equal(server.methods.add.schema, undefined);
+  t.equal(server.methods.doSomething.description, 'the description');
+  t.equal(server.methods.doSomething.schema.isJoi, true);
+  await server.stop();
 });
