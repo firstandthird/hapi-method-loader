@@ -171,14 +171,8 @@ tap.test('returns an error if the directory does not exist', async(t) => {
     },
     port: 3000
   });
-  try {
-    await methodLoader(server, { path: 'a nonexistent path' });
-    // this is weird?
-    console.log('what is thiws');
-    t.equal(true, false);
-  } catch (err) {
-    t.end();
-  }
+  await methodLoader(server, { path: 'a nonexistent path' });
+  t.end();
 });
 
 tap.test('will load "schema" and "description" metadata for hapi-docs', async(t) => {
