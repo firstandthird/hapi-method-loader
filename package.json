@@ -4,7 +4,7 @@
   "description": "Automatically loads hapi methods",
   "main": "index.js",
   "scripts": {
-    "test": "lab test/**.test.js -t 90 --leaks",
+    "test": "tap test/**.test.js --cov",
     "lint": "eslint **/*.test.js"
   },
   "keywords": [
@@ -16,14 +16,13 @@
   "license": "MIT",
   "dependencies": {
     "directory-files": "^1.0.0",
-    "lodash": "^4.17.2"
+    "lodash": "^4.17.2",
+    "tap": "^12.1.1"
   },
   "devDependencies": {
     "hapi": "^17.0.1",
-    "code": "^4.0.0",
     "eslint": "^3.9.1",
     "eslint-config-firstandthird": "^3.0.2",
-    "eslint-plugin-import": "^2.1.0",
-    "lab": "^15.1.2"
+    "eslint-plugin-import": "^2.1.0"
   }
 }
