@@ -20,9 +20,9 @@
     "tap": "^12.7.0"
   },
   "devDependencies": {
+    "@hapi/hapi": "^18.4.0",
     "eslint": "^3.19.0",
     "eslint-config-firstandthird": "^3.3.0",
-    "eslint-plugin-import": "^2.17.2",
-    "hapi": "^17.8.5"
+    "eslint-plugin-import": "^2.17.2"
   }
 }
