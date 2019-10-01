@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@hapi/hapi": "^18.4.0",
+    "@hapi/joi": "^16.1.4",
     "eslint": "^3.19.0",
     "eslint-config-firstandthird": "^3.3.0",
     "eslint-plugin-import": "^2.17.2"
