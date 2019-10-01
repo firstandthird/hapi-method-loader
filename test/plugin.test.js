@@ -1,5 +1,5 @@
 const tap = require('tap');
-const Hapi = require('hapi');
+const Hapi = require('@hapi/hapi');
 const methodLoader = require('../');
 const path = require('path');
 
@@ -320,6 +320,6 @@ tap.test('will load "schema" and "description" metadata for hapi-docs', async(t)
   t.equal(server.methods.add.description, undefined);
   t.equal(server.methods.add.schema, undefined);
   t.equal(server.methods.doSomething.description, 'the description');
-  t.equal(server.methods.doSomething.schema.isJoi, true);
+  t.ok(server.methods.doSomething.schema);
   await server.stop();
 });
