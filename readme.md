@@ -21,24 +21,29 @@ Will cause hapi to scan the _methods_ directory and import all the files it find
 
 Each method should be a file in the _methods_ directory. Sub directories may be used for nested methods. File name will dictate method name.
 
-Each file should export a _method_ function, which can take any parameters you want, return any value you want, and can be async or synchronous.  Optionally you can include an _options_ object which will be passed on to hapi's [server.method](https://hapi.dev/api/?v=20.1.0#-servermethodname-method-options) function.
+- Each file should export a _method_ function, which can take any parameters you want, return any value you want, and can be async or synchronous.  Inside the function the `this` keyword will be bound to the server.
+- Optionally you can include an _options_ object which will be passed on to hapi's [server.method](https://hapi.dev/api/?v=20.1.0#-servermethodname-method-options) function.
+- Optionally you can include a [Joi schema](https://www.npmjs.com/package/@hapi/joi) that will be read by [hapi-docs](https://github.com/firstandthird/hapi-docs) and made available in the server documentation.
+- Optionally you can include a _description_ string that will be read by [hapi-docs](https://github.com/firstandthird/hapi-docs).
 
 Example Method File:
 
 ```js
+const Joi = require('@hapi/joi');
 module.exports = {
   method: function(name) {
-    // 'this' will be found to the server:
+    // 'this' will be bound to the server:
     this.log(`Hello ${name}!`);
   },
   options: {
     cache: {
       expiresIn: 60 * 60 * 1000
-    },
-    generateKey: function() {
-      return 'getTimeExample';
     }
-  }
+  },
+  schema: Joi.object({
+    name: Joi.string().required()
+  }),
+  description: 'Greets the user by name'
 };
 ```
 
@@ -77,4 +82,4 @@ The following options can be passed when the plugin is registered with hapi:
 
 - _verbose_
 
-  When true, will print out information about each method that is loaded.
+  When true, will print out information about each method as it is loaded. Default is false.
