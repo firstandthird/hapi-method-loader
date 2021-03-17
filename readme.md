@@ -28,7 +28,8 @@ Example Method File:
 ```js
 module.exports = {
   method: function(name) {
-    return `Hello ${name}!`;
+    // 'this' will be found to the server:
+    this.log(`Hello ${name}!`);
   },
   options: {
     cache: {
